@@ -50,9 +50,9 @@ io.on("connection", function (socket) {
     io.sockets.emit("Server-response-like-comment");
   });
 
-  // socket.on("Client-request-createPost", function () {
-  //   io.sockets.emit("Server-response-like-comment");
-  // });
+  socket.on("Client-request-createPost", function () {
+    io.sockets.emit("Server-response-like-comment");
+  });
 
   // socket.on("client-user-connect", function (customer, account) {
   //   // console.log("customer----->>", customer);
