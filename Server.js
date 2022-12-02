@@ -27,11 +27,12 @@ io.on("connection", function (socket) {
   socket.on("send_message",(data)=>{
     console.log("data-->",data)
     socket.to(data.room).emit("recevie_message",data.content);
-    // io.sockets.emit(data.room+"recevie_message",data.content);
+    // socket.to(data.room).emit("get_one_message");
+    socket.broadcast.emit("get_one_message");
   })
 
   socket.on("I'm typing",(room,data)=>{
-    console.log("data",data)
+    // console.log("data",data)
     socket.broadcast.emit(room+"user-typing",data.studentCode,data.fullName+" đang soạn tin nhắn...")
   })
   socket.on("I stopped typing",(room)=>{
