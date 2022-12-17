@@ -29,6 +29,7 @@ io.on("connection", async function (socket) {
     listObject.email = email;
     listSocket.push(listObject);
     io.sockets.emit("server-send-listSocket", listSocket);
+    console.log("listSocket disconnect----->>", listSocket);
   });
   // console.log("END----->>", listSocket);
 
@@ -73,14 +74,14 @@ io.on("connection", async function (socket) {
   });
 
   socket.on("isSeen", (room) => {
-    io.sockets.emit("seen");
+    io.sockets.emit("get_one_message");
   });
 
   socket.on("disconnect", function () {
     listSocket.splice(listSocket.indexOf(socket.id), 1);
     console.log(socket.id + " ngat ket noi!!!!!!");
     io.sockets.emit("server-send-listSocket", listSocket);
-    console.log("listSocket disconnect----->>", listSocket);
+    // console.log("listSocket disconnect----->>", listSocket);
   });
 
   socket.on("Client-request-like", function () {
