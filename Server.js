@@ -22,14 +22,21 @@ var listSocket = [];
 io.on("connection", async function (socket) {
   console.log("co nguoi vua ket noi", socket.id);
 
-  socket.on("connectUser", (email) => {
-
+  socket.on("connectUser", (email, arr) => {
+    for (let index = 0; index < arr.length; index++) {
+      const roomId = arr[index];
+      socket.join(roomId);
+      console.log("User joined room: " + roomId);
+    }
     listObject = {};
     listObject.socketId = socket.id;
     listObject.email = email;
     listSocket.push(listObject);
-    io.sockets.emit("server-send-listSocket", listSocket);
-    console.log("listSocket disconnect----->>", listSocket);
+    // io.sockets.emit("server-send-listSocket", listSocket);
+    console.log("listSocket connectUser----->>", listSocket);
+    io.sockets.emit("server-send-listSocket-room",listSocket);
+
+
   });
   // console.log("END----->>", listSocket);
 
@@ -43,23 +50,35 @@ io.on("connection", async function (socket) {
 
     socket.to(data.room).emit("recevie_message", data.content);
     // socket.broadcast.emit("get_one_message");
-    io.sockets.emit("get_one_message");
+    // io.sockets.emit("get_one_message");
+    // socket.to(data.room).emit("reset_nameGroup");
+    console.log("send_message")
+
+    io.sockets.emit("reset_nameGroup",listSocket);
   });
 
   socket.on("create-group", function () {
-    console.log("create-group")
-    io.sockets.emit("get_one_message");
+    console.log("create-group");
+    // io.sockets.emit("get_one_message");
+    socket.broadcast.emit("reset_nameGroup",listSocket);
+    socket.broadcast.emit("reset_getAllNotification",listSocket);
+    io.sockets.emit("reset_private_room");
+
   });
   socket.on("add-friend", function () {
-    console.log("add-friend")
+    // console.log("add-friend");
     socket.broadcast.emit("request-accept");
+    io.sockets.emit("reset_nameGroup",listSocket);
+    socket.broadcast.emit("reset_getAllNotification",listSocket);
+
   });
 
   socket.on("accept-friend-request", function () {
-    console.log("accept-friend-request")
-    io.sockets.emit("accept");
+    console.log("accept-friend-request");
+    io.sockets.emit("reset_friend",listSocket);
+    io.sockets.emit("reset_nameGroup",listSocket);
+    socket.broadcast.emit("reset_getAllNotification",listSocket);
   });
-  
 
   socket.on("I'm typing", (room, data) => {
     console.log("data", data);
@@ -69,36 +88,57 @@ io.on("connection", async function (socket) {
       data.fullName + " đang soạn tin nhắn..."
     );
   });
+
   socket.on("I stopped typing", (room) => {
     socket.broadcast.emit(room + "stop-user-typing", "");
   });
 
-  socket.on("isSeen", (room) => {
-    io.sockets.emit("get_one_message");
+  socket.on("isSeen", () => {
+    console.log("isSeen")
+    socket.emit("reset_nameGroup",listSocket);
   });
 
   socket.on("disconnect", function () {
-    listSocket.splice(listSocket.indexOf(socket.id), 1);
     console.log(socket.id + " ngat ket noi!!!!!!");
-    io.sockets.emit("server-send-listSocket", listSocket);
-    // console.log("listSocket disconnect----->>", listSocket);
+    // console.log(" ------- -> ",listSocket.socketId.indexOf(socket.id));
+      console.log("listSocket-<<<<<<",listSocket)
+
+    for (let index = 0; index < listSocket.length; index++) {
+      if (listSocket[index].socketId == socket.id) {
+        listSocket.splice(index, 1)
+      }
+    }
+    console.log("disconnect----->>", listSocket);
+
+    io.sockets.emit("server-send-listSocket-room",listSocket);
   });
 
+  socket.on("add-member", function () {
+    socket.emit("accept-member");
+    io.sockets.emit("reset_nameGroup",listSocket);
+  });
+
+  socket.on("request-group", function () {
+    socket.broadcast.emit("accept-member");
+    socket.broadcast.emit("reset_getAllNotification",listSocket);
+
+  });
+  
+//--------------------------------------------------------------------------
+//Like-comment-create
   socket.on("Client-request-like", function () {
-    io.sockets.emit("Server-response-like-comment");
+    socket.broadcast.emit("Server-response-like-comment");
   });
-
   socket.on("Client-request-comment", function () {
-    io.sockets.emit("Server-response-like-comment");
+    socket.broadcast.emit("Server-response-like-comment");
   });
-
   socket.on("Client-request-createPost", function () {
-    io.sockets.emit("Server-response-like-comment");
+    socket.broadcast.emit("Server-response-like-comment");
   });
-
-  socket.on("logout", function (account) {
-    listSocket.splice(listSocket.indexOf(socket.id), 1);
-    io.sockets.emit("server-send-listSocket", listSocket);
-    console.log("listSocket----->>", listSocket);
-  });
+//--------------------------------------------------------------------------
+  // socket.on("logout", function (account) {
+  //   listSocket.splice(listSocket.indexOf(socket.id), 1);
+  //   io.sockets.emit("server-send-listSocket-room", listSocket);
+  //   console.log("listSocket----->>", listSocket);
+  // });
 });
